@@ -279,33 +279,7 @@ const Home = (props: HomeProps) => {
                     For future use... maybe.
                   </Typography>
                 </Grid>
-              <Grid
-                container
-                direction="row"
-                justifyContent="center"
-                wrap="nowrap"
-              >
-                <BabyMintButton onClick={async () => await merkleButtonClicked()}>
-                  <Typography variant="body2" color="textSecondary" style={{
-                      fontSize: "16px",
-                      fontWeight: "bold",
-                      color: "white",
-                      textAlign: "center",
-                    }}>
-                    PROOF
-                  </Typography>
-                </BabyMintButton>
-                <BabyMintButton onClick={async () => await allowMintButtonClicked()} disabled={isUserMinting || candyMachine?.itemsRemaining === 0}>
-                  <Typography variant="body2" color="textSecondary" style={{
-                      fontSize: "16px",
-                      fontWeight: "bold",
-                      color: "white",
-                      textAlign: "center",
-                    }}>
-                    { getAllowMintButtonContent() }
-                  </Typography>
-                </BabyMintButton>
-              </Grid>
+             
               <Grid
                 container
                 direction="row"
