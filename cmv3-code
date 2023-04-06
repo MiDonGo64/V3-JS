@@ -1,0 +1,148 @@
+import { Metaplex, getMerkleProof, token, sol, getMerkleRoot } from "@metaplex-foundation/js";
+import { PublicKey } from "@solana/web3.js";
+
+export interface HomeProps {
+    candyMachineId: string;
+  }
+
+export interface CandyMachineState {
+  rawCandyMachine: any;
+
+  address: PublicKey;
+
+  authorityAddress: string;
+  mintAuthorityAddress: string;
+  collectionMintAddress: string;
+  symbol: string;
+  sellerFeeBasisPoints: number;
+  isMutable: boolean
+  maxEditionSupply: string;
+
+  creators: {
+    address: string;
+    percentageShare: number;
+  }[];
+
+  items: {
+    index: number;
+    minted: boolean;
+    name: string;
+    uri: string;
+  }[];
+
+  itemsAvailable: number;
+  itemsMinted: number;
+  itemsRemaining: number;
+  itemsLoaded: number;
+  isFullyLoaded: boolean;
+}
+
+export interface NFT {
+  rawNft: any;
+
+  updateAuthorityAddress: PublicKey;
+
+  name: string;
+  symbol: string;
+  description: string;
+  uri: string;
+  imageUri: string;
+  attributes: {
+    trait_type: string;
+    value: string;
+  }[];
+}
+
+const tokenMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+
+const tokenAccount = new PublicKey("PUT-YOUR-USDC-ACCOUNT-ADDRESS-HERE");
+
+
+export const getCandyMachineState = async (
+  metaplex: Metaplex,
+  candyMachineId: PublicKey,
+  ): Promise<CandyMachineState> => {
+  const candyMachine: any = await metaplex
+    .candyMachines()
+    .findByAddress({ address: candyMachineId });
+
+  const candyMachineState: CandyMachineState = {
+    rawCandyMachine: candyMachine,
+
+    address: new PublicKey(candyMachine.address),
+  
+    authorityAddress: candyMachine.authorityAddress,
+    mintAuthorityAddress: candyMachine.mintAuthorityAddress,
+    collectionMintAddress: candyMachine.collectionMintAddress,
+    symbol: candyMachine.symbol,
+    sellerFeeBasisPoints: candyMachine.sellerFeeBasisPoints,
+    isMutable: candyMachine.isMutable,
+    maxEditionSupply: candyMachine.maxEditionSupply,
+  
+    creators: candyMachine.creators.map((creator: any) => {
+      return {
+        address: new PublicKey(creator.address),
+        percentageShare: creator.percentageShare,
+      }
+    }),
+
+    items: candyMachine.items.map((item: any) => {
+      return {
+        index: item.index,
+        minted: item.minted,
+        name: item.name,
+        uri: item.uri,
+      }
+    }),
+  
+    itemsAvailable: +candyMachine.itemsAvailable,
+    itemsMinted: +candyMachine.itemsMinted,
+    itemsRemaining: +candyMachine.itemsRemaining,
+    itemsLoaded: candyMachine.itemsLoaded,
+    isFullyLoaded: candyMachine.isFullyLoaded,
+  };
+
+  return candyMachineState;
+};
+
+
+export const payMint = async (
+  metaplex: Metaplex,
+  candyMachineState: CandyMachineState,
+) => {
+  try {
+    const result: any = await metaplex.candyMachines().mint({
+      candyMachine: candyMachineState.rawCandyMachine,
+      collectionUpdateAuthority: new PublicKey("PUT-YOUR-OWNER-WALLET-ADDRESS-HERE"),
+  group: "pay",
+      guards: {
+        tokenPayment: {
+          amount: token(100000000),
+          mint: tokenMint,
+          destinationAta: tokenAccount,
+        },
+      },
+  })
+
+    console.log(result);
+
+    return {
+      rawNft: result.nft,
+      updateAuthorityAddress: new PublicKey(result.nft.updateAuthorityAddress),
+      name: result.nft.name,
+      symbol: result.nft.symbol,
+      description: result.nft.json.description,
+      imageUri: result.nft.json.image,
+      uri: result.nft.uri,
+      attributes: result.nft.json.attributes.map((attribute: any) => {
+        return {
+          trait_type: attribute.trait_type,
+          value: attribute.value,
+        }
+      }),
+    }
+  } catch(e) {
+    console.log(e);
+    return null;
+  }
+}
